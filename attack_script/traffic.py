@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import subprocess
 import sys
 import time
@@ -6,7 +8,7 @@ import requests
 
 
 if len(sys.argv) != 2:
-    print(f"Usage: python3 {sys.argv[0]} <target_ip>")
+    print(f"Usage: python3 {sys.argv[0]} <TARGET_IP>")
     sys.exit(1)
 
 
@@ -24,7 +26,7 @@ def generate_normal_http_traffic(count):
     success = 0
     failed = 0
 
-    for i in range(1, count + 1):
+    for index in range(1, count + 1):
         try:
             response = requests.get(
                 f"http://{TARGET_IP}:{HTTP_PORT}/",
@@ -40,9 +42,9 @@ def generate_normal_http_traffic(count):
         except requests.RequestException:
             failed += 1
 
-        if i % 20 == 0 or i == count:
+        if index % 50 == 0 or index == count:
             print(
-                f"[*] HTTP progress: {i}/{count} "
+                f"[*] HTTP progress: {index}/{count} "
                 f"success={success} failed={failed}"
             )
 
@@ -54,7 +56,10 @@ def generate_normal_http_traffic(count):
 def run_command(name, command):
     print(f"\n[+] Starting {name}")
 
-    result = subprocess.run(command, check=False)
+    result = subprocess.run(
+        command,
+        check=False,
+    )
 
     if result.returncode == 0:
         print(f"[+] {name} completed")
@@ -74,6 +79,13 @@ generate_normal_http_traffic(NORMAL_REQUEST_COUNT)
 run_command(
     "UDP flood",
     ["python3", "udp_flood.py", TARGET_IP, str(UDP_PORT)],
+)
+
+generate_normal_http_traffic(NORMAL_REQUEST_COUNT)
+
+run_command(
+    "HTTP GET flood",
+    ["python3", "http_get_flood.py", TARGET_IP, str(HTTP_PORT)],
 )
 
 generate_normal_http_traffic(NORMAL_REQUEST_COUNT)

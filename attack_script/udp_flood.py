@@ -17,7 +17,7 @@ if not 1 <= TARGET_PORT <= 65535:
     print("Invalid port")
     sys.exit(1)
 
-PACKET_COUNT = 1000
+PACKET_COUNT = 500
 INTERVAL = 0.001
 
 for _ in range(PACKET_COUNT):
