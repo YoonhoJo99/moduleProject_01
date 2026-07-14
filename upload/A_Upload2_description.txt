@@ -1,29 +1,34 @@
-1  설정값 지정
-INTERFACE, ROTATE_SEC, UPLOAD_URL, 저장 폴더, 업로드 후 삭제 여부를 설정함.
+1. 설정값 지정
+INTERFACE, ROTATE_SEC, UPLOAD_URL, 저장 폴더(PCAP/CSV), 업로드 후 삭제 여부를 설정함.
 
-2  PCAP 저장 폴더 생성
-os.makedirs(PCAP_DIR, exist_ok=True)로 pcaps 폴더를 자동 생성함.
+2. 저장 폴더 생성
+os.makedirs로 pcaps, csvs 폴더를 자동 생성함.
 
-3  tcpdump 실행
-tcpdump -i <인터페이스> -G 10 -w pcaps/cap_%Y%m%d_%H%M%S.pcap으로 10초마다 새 PCAP 파일을 생성함.
+3. tcpdump 실행
+tcpdump -i <인터페이스> -G 10 -Z root -w pcaps/cap_%Y%m%d_%H%M%S.pcap으로 10초마다 새 PCAP 파일을 생성함. 
+(-Z root는 tcpdump가 권한을 낮추면서 파일 쓰기가 거부되는 문제를 방지함)
 
-4  완료된 PCAP 탐색
-가장 최신 파일은 아직 기록 중이므로 제외하고, 이전 PCAP 파일만 업로드 대상으로 선택함.
+4. 완료된 PCAP 탐색
+가장 최신 파일은 아직 기록 중이므로 제외하고, 크기가 0인 빈 파일(트래픽 없는 구간)도 걸러낸 뒤 이전 PCAP만 처리 대상으로 선택함.
 
-5  B 서버로 파일 전송
-curl -F "file=@<pcap경로>" http://B_TAILSCALE_IP:5000/upload 방식으로 PCAP을 POST 업로드함.
+5. CICFlowMeter 변환
+선택된 PCAP을 cicflowmeter -f <pcap> -c <csv>로 CICIDS 형식의 특징이 담긴 CSV로 변환함. 
+(Windows에서 CICFlowMeter가 동작하지 않아 Linux인 A에서 변환을 수행함)
 
-6  전송 성공 확인
+6. B 서버로 CSV 전송
+curl -F "file=@<csv경로>" http://B_TAILSCALE_IP:5000/upload 방식으로 변환된 CSV를 POST 업로드함.
+
+7. 전송 성공 확인
 curl 종료 코드가 0이면 업로드 성공으로 처리하고 로그를 남김.
 
-7  성공한 파일 삭제
-DELETE_AFTER_UPLOAD=True일 경우 전송 완료된 PCAP을 로컬에서 삭제함.
+8. 성공한 파일 삭제
+DELETE_AFTER_UPLOAD=True일 경우 전송 완료된 PCAP과 CSV를 로컬에서 삭제함.
 
-8  실패한 파일 재시도
-업로드 실패 시 파일을 삭제하지 않고 남겨두며, 다음 반복에서 다시 전송함.
+9. 실패한 파일 처리
+변환 실패 시 해당 파일을 건너뛰고, 업로드 실패 시 파일을 남겨 다음 반복에서 재전송함.
 
-9  반복 감시
+10. 반복 감시
 POLL_SEC=2 기준으로 2초마다 완료된 PCAP이 있는지 계속 확인함.
 
-10  종료 처리
+11. 종료 처리
 Ctrl+C 입력 시 실행 중인 tcpdump를 종료하고 프로그램을 안전하게 끝냄.

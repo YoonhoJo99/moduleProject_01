@@ -1,32 +1,29 @@
-1 > 설정값 지정
+1. 설정값 지정
 LISTEN_PORT, C 예측 서버 주소, 정규화 스크립트명, 중간 파일 삭제 여부를 설정함.
 
-2 > 작업 폴더 생성
-received, converted, normalized 폴더를 자동 생성함.
+2. 작업 폴더 생성
+received, normalized 폴더를 자동 생성함.
 
-3 > B 서버 실행
-app.run(host="0.0.0.0", port=5000)으로 A의 PCAP 업로드를 받을 서버를 실행함.
+3. B 서버 실행
+app.run(host="0.0.0.0", port=5000)으로 A의 CSV 업로드를 받을 서버를 실행함.
 
-4 > A에서 PCAP 수신
-POST /upload로 들어온 파일을 received 폴더에 저장함.
+4. A에서 CSV 수신
+POST /upload로 들어온 파일을 received 폴더에 저장함. (A가 이미 CICFlowMeter 변환까지 완료한 CSV를 전송함)
 
-5 > 백그라운드 처리 시작
-수신 직후 threading.Thread()로 변환 작업을 별도 실행해 A에게 빠르게 200 OK를 반환함.
+5. 백그라운드 처리 시작
+수신 직후 threading.Thread()로 정규화 작업을 별도 실행해 A에게 빠르게 200 OK를 반환함.
 
-6 > PCAP을 CSV로 변환
-cicflowmeter -f <pcap> -c <csv> 명령으로 PCAP을 원본 Flow CSV로 변환함.
+6. CSV 정규화
+python normalize.py <raw.csv> <normalized.csv> 명령으로 팀원 정규화 스크립트를 실행해 CICIDS 학습 형식에 맞게 변환함.
 
-7 > CSV 정규화
-python normalize.py <raw.csv> <normalized.csv> 명령으로 팀원 정규화 스크립트를 실행함.
-
-8 > C 예측 서버로 전송
+7. C 예측 서버로 전송
 curl -F "file=@<normalized.csv>" http://C_TAILSCALE_IP:6000/upload 방식으로 정규화 CSV를 POST 전송함.
 
-9 > 성공 여부 확인
-변환, 정규화, 전송 중 하나라도 실패하면 로그를 남기고 해당 파일 처리를 중단함.
+8. 성공 여부 확인
+정규화, 전송 중 하나라도 실패하면 로그를 남기고 해당 파일 처리를 중단함.
 
-10 > 성공한 파일 정리
-전체 처리가 성공하면 PCAP, 원본 CSV, 정규화 CSV를 삭제해 저장 공간을 관리함.
+9. 성공한 파일 정리
+전체 처리가 성공하면 수신 CSV와 정규화 CSV를 삭제해 저장 공간을 관리함.
 
-11 > 오류 및 시간 초과 처리
+10. 오류 및 시간 초과 처리
 각 작업의 실패, 예외, 120초 처리 제한, 30초 전송 제한을 로그에 기록함.
