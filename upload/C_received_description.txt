@@ -1,0 +1,29 @@
+1  설정값 지정
+LISTEN_PORT=6000, 수신 폴더 received를 설정함.
+
+2  수신 폴더 생성
+os.makedirs(RECV_DIR, exist_ok=True)로 정규화 CSV 저장 폴더를 자동 생성함.
+
+3  Flask 서버 생성
+app = Flask(__name__)으로 C 예측 서버 앱을 생성함.
+
+4  업로드 엔드포인트 생성
+POST /upload 요청으로 B가 보낸 정규화 CSV를 받음.
+
+5  파일 존재 여부 확인
+업로드 요청에 file이 없으면 400 오류를 반환하고 로그를 남김.
+
+6  정규화 CSV 저장
+수신한 파일을 received/<파일명> 경로에 저장함.
+
+7  수신 로그 기록
+정상 수신 시 파일명을 predict_server.log와 터미널에 기록함.
+
+8  예측 연결 지점 확보
+저장된 save_path를 이용해 이후 모델 예측 코드를 붙일 수 있도록 처리 위치를 남겨둠.
+
+9  성공 응답 반환
+파일 저장이 끝나면 B에게 200 OK와 "ok"를 반환함.
+
+10  C 서버 실행
+app.run(host="0.0.0.0", port=6000)으로 Tailscale IP를 통해 B의 파일을 받을 수 있게 서버를 실행함.
