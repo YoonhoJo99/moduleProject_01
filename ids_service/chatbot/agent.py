@@ -1,16 +1,16 @@
 """
-IDS 챗봇 (Streamlit + OpenAI Responses API)
+IDS 챗봇 로직 (재사용 가능한 함수 모듈)
+
+Streamlit UI와 분리된 순수 로직만 담고 있음.
+대시보드(dashboard/app.py)에서 import해서 사용.
 
 기능:
-- 사용자가 자연어로 시간 범위 지정 (예: "최근 3시간")
-- SQLite에서 해당 기간 Alert 조회 및 통계 집계
-- OpenAI 모델이 Web Search 툴과 함께 보안 보고서 생성
-
-실행 방법:
-    streamlit run chatbot/agent.py
+- 자연어 시간 범위 파싱
+- SQLite Alert 조회 + 통계 집계
+- OpenAI Responses API로 보고서 생성 (Web Search 툴 포함)
 
 전제:
-    ids_service/.env 파일에 OPENAI_API_KEY 설정 필요
+- ids_service/.env 파일에 OPENAI_API_KEY 설정 필요
 """
 
 import os
@@ -19,22 +19,19 @@ import sys
 from pathlib import Path
 from datetime import datetime, timedelta
 
-import streamlit as st
 from dotenv import load_dotenv
 from openai import OpenAI
 
 # 상위 폴더(ids_service/)를 파이썬 경로에 추가
-# → db.database를 import할 수 있게 함
 sys.path.append(str(Path(__file__).parent.parent))
 
-from db.database import get_connection  # 우리 DB 연결 함수 재사용
+from db.database import get_connection
 
 
 # ============================================================
 # 설정
 # ============================================================
 
-# .env 파일 로드 (ids_service/.env)
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -61,7 +58,7 @@ tools = [
 
 def get_alerts_between(start_time: datetime, end_time: datetime):
     """지정한 시간 범위의 Alert를 최신순으로 조회"""
-    conn = get_connection()  # 우리 database.py의 함수 재사용
+    conn = get_connection()
     rows = conn.execute("""
         SELECT *
         FROM alerts
@@ -154,6 +151,12 @@ def extract_hours(user_message: str) -> int:
 def generate_report(user_message: str) -> str:
     """
     사용자 질문 → DB 조회 → LLM 보고서 생성
+    
+    Args:
+        user_message: 사용자가 입력한 자연어 질문
+    
+    Returns:
+        LLM이 생성한 보고서 텍스트 (한국어)
     """
     hours = extract_hours(user_message)
     data = get_alert_summary(hours)
@@ -206,67 +209,3 @@ def generate_report(user_message: str) -> str:
     )
 
     return response.output_text
-
-
-# ============================================================
-# Streamlit UI
-# ============================================================
-
-st.set_page_config(page_title="IDS ChatBot", layout="wide")
-
-st.title("💬 IDS 보안 분석 챗봇")
-st.caption("자연어로 시간 범위를 지정하면, Alert 데이터를 조회해 보안 보고서를 작성합니다.")
-
-# API Key 검증
-if not OPENAI_API_KEY:
-    st.error("⚠ ids_service/.env 파일에 OPENAI_API_KEY를 설정해주세요.")
-    st.stop()
-
-# 채팅 히스토리 초기화
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# 사이드바: 예시 질문
-with st.sidebar:
-    st.subheader("💡 예시 질문")
-    st.code("최근 3시간 동안의 트래픽 기반으로 보고서 작성해줘")
-    st.code("최근 1시간 Alert 요약해줘")
-    st.code("최근 6시간 주요 공격 IP 알려줘")
-
-    st.divider()
-    st.caption(f"🤖 모델: `{MODEL}`")
-    st.caption("🔧 툴: Web Search")
-
-# 기존 채팅 렌더링
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
-
-# 사용자 입력
-user_input = st.chat_input("예: 최근 3시간 동안의 트래픽 기반으로 보고서 작성해줘")
-
-if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
-
-    with st.chat_message("user"):
-        st.write(user_input)
-
-    with st.chat_message("assistant"):
-        with st.spinner("SQLite Alert 데이터를 조회하고 보고서를 작성하는 중..."):
-            try:
-                answer = generate_report(user_input)
-                st.write(answer)
-            except Exception as e:
-                answer = f"⚠ 보고서 생성 중 오류가 발생했습니다: {e}"
-                st.error(answer)
-
-    st.session_state.messages.append({"role": "assistant", "content": answer})
-
-"""
-주요 수정 사항:
-    ✅ DB 경로 → 우리 규칙 (db/database.py 사용)
-    ✅ init_db(), insert_alert() 제거 (우리 database.py가 담당)
-    ✅ 샘플 데이터 3개 제거 (가짜 생성기가 있음)
-    ✅ detection_type "Rule + Model" → 우리 확정본 사용 (샘플 없으니 자동 해결)
-    ✅ 조회 함수만 유지 (get_alerts_between, get_alert_summary)
-"""
