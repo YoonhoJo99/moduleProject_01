@@ -51,7 +51,7 @@ def convert(pcap_path, csv_path):
 def normalize(raw_csv, norm_csv):
     log.info("Normalizing: %s", os.path.basename(raw_csv))
     result = subprocess.run(
-        ["python3", NORMALIZE_SCRIPT, raw_csv, norm_csv],
+        ["python", NORMALIZE_SCRIPT, raw_csv, norm_csv],
         capture_output=True, text=True, timeout=120,
     )
     if result.returncode != 0:
