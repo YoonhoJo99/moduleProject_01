@@ -10,7 +10,7 @@ import urllib.request
 TARGET = sys.argv[1]
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 80
 DURATION = int(sys.argv[3]) if len(sys.argv) > 3 else 15
-THREADS = 20
+THREADS = 3
 
 base = f"http://{TARGET}:{PORT}/"
 stop = False
@@ -39,6 +39,7 @@ def flood():
             pass
         with lock:
             sent += 1
+        time.sleep(0.1)
 
 def main():
     global stop
