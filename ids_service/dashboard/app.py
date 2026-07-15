@@ -8,7 +8,7 @@ IDS 실시간 모니터링 대시보드 + 챗봇 (Streamlit 통합 앱)
 
 구조:
 - 좌측 2/3: 대시보드 (자동 갱신)
-- 우측 1/3: 챗봇 (사용자 액션 시 동작)
+- 우측 1/3: 챗봇 (Function Calling 기반)
 """
 
 import sqlite3
@@ -45,7 +45,7 @@ st.set_page_config(
 
 
 # ============================================================
-# DB 조회 함수
+# DB 조회 함수 (대시보드용)
 # ============================================================
 
 def load_alerts(limit: int = 500) -> pd.DataFrame:
@@ -175,30 +175,42 @@ with main_col:
 
 
 # ============================================================
-# 오른쪽: 챗봇 (사용자 액션 시 동작)
+# 오른쪽: 챗봇 (Function Calling 기반)
 # ============================================================
 with chatbot_col:
     st.subheader("💬 보안 챗봇")
-    st.caption("자연어로 시간 범위를 지정해서 물어보세요.")
+    st.caption("자연어로 질문하면 LLM이 필요한 함수를 스스로 호출합니다.")
 
     # API Key 검증
     if not OPENAI_API_KEY:
         st.error("⚠ .env 파일에 OPENAI_API_KEY를 설정해주세요.")
         st.stop()
 
-    # 챗봇 예시 질문 (Expander로 접기)
+    # 챗봇 예시 질문
     with st.expander("💡 예시 질문 보기"):
-        st.code("최근 3시간 보고서 작성해줘")
+        st.code("최근 3건 Alert 보여줘")
+        st.code("SSH Brute Force 공격만 보여줘")
+        st.code("최근 3시간 동안의 트래픽 기반으로 보고서 작성해줘")
         st.code("최근 1시간 Alert 요약해줘")
-        st.code("최근 6시간 주요 공격 IP 알려줘")
 
-    st.caption(f"🤖 모델: `{MODEL}` | 🔧 Web Search")
+    st.caption(f"🤖 모델: `{MODEL}` | 🔧 Web Search + Function Calling")
 
-    # 채팅 히스토리 초기화
+    # ------------------------------------------------------------
+    # 세션 상태 초기화
+    # ------------------------------------------------------------
+    
+    # 대화 히스토리
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    
+    # 마지막 Function Calling 결과 (지시대명사 처리용)
+    # 예: 사용자가 "그걸", "방금 것"이라고 물었을 때 참조
+    if "last_tool_context" not in st.session_state:
+        st.session_state.last_tool_context = None
 
-    # 대화 표시 컨테이너 (스크롤 가능)
+    # ------------------------------------------------------------
+    # 대화창 (스크롤 가능한 컨테이너)
+    # ------------------------------------------------------------
     chat_container = st.container(height=500)
 
     with chat_container:
@@ -206,10 +218,24 @@ with chatbot_col:
             with st.chat_message(message["role"]):
                 st.write(message["content"])
 
-    # 사용자 입력
-    user_input = st.chat_input("예: 최근 3시간 보고서")
+                if message["role"] == "assistant":
+                    st.download_button(
+                        label="답변 다운로드",
+                        data=message["content"],
+                        file_name=f"ids_chatbot_answer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                        mime="text/markdown",
+                        key=f"download_history_{id(message)}",
+                    )
+
+    # ------------------------------------------------------------
+    # 사용자 입력 처리
+    # ------------------------------------------------------------
+    user_input = st.chat_input("예: 최근 3건 Alert 보여줘")
 
     if user_input:
+        # 최근 6개 대화 히스토리 (문맥 이해용)
+        conversation_context = st.session_state.messages[-6:]
+
         # 사용자 메시지 저장
         st.session_state.messages.append({"role": "user", "content": user_input})
 
@@ -220,13 +246,31 @@ with chatbot_col:
 
             # 챗봇 응답 생성
             with st.chat_message("assistant"):
-                with st.spinner("보고서 작성 중..."):
+                with st.spinner("누구보다 열심히 찾아보는중..."):
                     try:
-                        answer = generate_report(user_input)
+                        # Function Calling + 대화 컨텍스트 전달
+                        answer, latest_context = generate_report(
+                            user_message=user_input,
+                            previous_context=st.session_state.last_tool_context,
+                            conversation_context=conversation_context,
+                        )
                         st.write(answer)
+
+                        st.download_button(
+                            label="답변 다운로드",
+                            data=answer,
+                            file_name=f"ids_chatbot_answer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                            mime="text/markdown",
+                            key=f"download_current_{len(st.session_state.messages)}",
+                        )
+
+                        # 새로운 tool 결과가 있으면 저장 (다음 질문에 활용)
+                        if latest_context:
+                            st.session_state.last_tool_context = latest_context
+
                     except Exception as e:
-                        answer = f"⚠ 오류: {e}"
+                        answer = f"⚠ 보고서 생성 중 오류가 발생했습니다: {e}"
                         st.error(answer)
 
-        # 응답 저장
+        # 응답을 히스토리에 저장
         st.session_state.messages.append({"role": "assistant", "content": answer})
