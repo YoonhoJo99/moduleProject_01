@@ -12,7 +12,7 @@ from flask import Flask, request
 # CONFIG - edit these for your environment
 # ============================================================
 LISTEN_PORT = 5000                                  # port A uploads to
-PREDICT_URL = "http://PREDICT_TS_IP:6000/upload"    # <-- C server Tailscale IP + endpoint
+PREDICT_URL = "http://100.81.19.60:6000/upload"    # <-- C server Tailscale IP + endpoint
 NORMALIZE_SCRIPT = "normalize.py"                   # <-- teammate's normalize script filename
 DELETE_INTERMEDIATE = True                          # remove files after sending
 # ============================================================
