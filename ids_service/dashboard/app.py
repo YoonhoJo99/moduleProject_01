@@ -7,7 +7,7 @@ IDS 실시간 모니터링 대시보드 + 챗봇 (Streamlit 통합 앱)
 접속: http://localhost:8501
 
 구조:
-- 좌측 2/3: 대시보드 (자동 갱신)
+- 좌측 2/3: 대시보드 (자동 갱신)..
 - 우측 1/3: 챗봇 (Function Calling 기반)
 """
 
@@ -218,6 +218,15 @@ with chatbot_col:
             with st.chat_message(message["role"]):
                 st.write(message["content"])
 
+                if message["role"] == "assistant":
+                    st.download_button(
+                        label="답변 다운로드",
+                        data=message["content"],
+                        file_name=f"ids_chatbot_answer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                        mime="text/markdown",
+                        key=f"download_history_{id(message)}",
+                    )
+
     # ------------------------------------------------------------
     # 사용자 입력 처리
     # ------------------------------------------------------------
@@ -246,6 +255,14 @@ with chatbot_col:
                             conversation_context=conversation_context,
                         )
                         st.write(answer)
+
+                        st.download_button(
+                            label="답변 다운로드",
+                            data=answer,
+                            file_name=f"ids_chatbot_answer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                            mime="text/markdown",
+                            key=f"download_current_{len(st.session_state.messages)}",
+                        )
 
                         # 새로운 tool 결과가 있으면 저장 (다음 질문에 활용)
                         if latest_context:
