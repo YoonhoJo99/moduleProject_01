@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # A_upload.py  (A: Ubuntu/Kali)
 # Continuous tcpdump with -G 10s rotation (lossless) + -Z root (fixes permission drop).
+# Clears old files + old tcpdump on startup, then:
 # Watches for finished pcaps -> CICFlowMeter convert -> upload csv to B -> delete.
 
 import os
@@ -14,11 +15,11 @@ import subprocess
 # ============================================================
 # CONFIG - edit these for your environment
 # ============================================================
-INTERFACE = "docker0"                           # capture interface (ip link to check)
-ROTATE_SEC = 10                                 # new pcap every N seconds
+INTERFACE = "ens33"                              # capture interface (ip link to check)
+ROTATE_SEC = 10                                  # new pcap every N seconds
 PCAP_DIR = "pcaps"
 CSV_DIR = "csvs"
-UPLOAD_URL = "http://127.0.0.1:5000/upload"     # <-- B server (127.0.0.1 for local test)
+UPLOAD_URL = "http://IP:5000/upload"   # <-- B server
 DELETE_AFTER_UPLOAD = True
 POLL_SEC = 2
 # ============================================================
@@ -30,14 +31,23 @@ logging.basicConfig(
 )
 log = logging.getLogger()
 
+# create folders and clear any leftover files from previous runs
 for d in (PCAP_DIR, CSV_DIR):
     os.makedirs(d, exist_ok=True)
+    for old in glob.glob(os.path.join(d, "*")):
+        try:
+            os.remove(old)
+        except OSError:
+            pass
 
 processed = set()
 tcpdump_proc = None
 
 
 def start_tcpdump():
+    # kill any leftover tcpdump from previous runs so we don't get duplicate captures
+    subprocess.run(["pkill", "-9", "tcpdump"], stderr=subprocess.DEVNULL)
+    time.sleep(1)
     # -G rotates every ROTATE_SEC; -Z root keeps root so it can write the files.
     pattern = os.path.join(PCAP_DIR, "cap_%Y%m%d_%H%M%S.pcap")
     cmd = ["tcpdump", "-i", INTERFACE, "-G", str(ROTATE_SEC), "-Z", "root", "-w", pattern]
