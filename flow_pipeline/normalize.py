@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+# 69개의 열
 CICIDS2017_COLUMNS = [
     "Destination Port", "Flow Duration", "Total Fwd Packets", "Total Backward Packets",
     "Total Length of Fwd Packets", "Total Length of Bwd Packets",
@@ -11,14 +12,16 @@ CICIDS2017_COLUMNS = [
     "Flow Bytes/s", "Flow Packets/s", "Flow IAT Mean", "Flow IAT Std", "Flow IAT Max", "Flow IAT Min",
     "Fwd IAT Total", "Fwd IAT Mean", "Fwd IAT Std", "Fwd IAT Max", "Fwd IAT Min",
     "Bwd IAT Total", "Bwd IAT Mean", "Bwd IAT Std", "Bwd IAT Max", "Bwd IAT Min",
-    "Fwd PSH Flags", "Bwd PSH Flags", "Fwd URG Flags", "Bwd URG Flags",
+    "Fwd PSH Flags",  "Fwd URG Flags", 
+    # "Bwd URG Flags","Bwd PSH Flags",   학습에 사용 X
     "Fwd Header Length", "Bwd Header Length", "Fwd Packets/s", "Bwd Packets/s",
     "Min Packet Length", "Max Packet Length", "Packet Length Mean", "Packet Length Std", "Packet Length Variance",
     "FIN Flag Count", "SYN Flag Count", "RST Flag Count", "PSH Flag Count", "ACK Flag Count", "URG Flag Count",
     "CWE Flag Count", "ECE Flag Count", "Down/Up Ratio", "Average Packet Size",
-    "Avg Fwd Segment Size", "Avg Bwd Segment Size", "Fwd Header Length.1",
-    "Fwd Avg Bytes/Bulk", "Fwd Avg Packets/Bulk", "Fwd Avg Bulk Rate",
-    "Bwd Avg Bytes/Bulk", "Bwd Avg Packets/Bulk", "Bwd Avg Bulk Rate",
+    "Avg Fwd Segment Size", "Avg Bwd Segment Size", 
+    #"Fwd Header Length.1",
+    #"Fwd Avg Bytes/Bulk", "Fwd Avg Packets/Bulk", "Fwd Avg Bulk Rate", 학습에 사용 X
+    #"Bwd Avg Bytes/Bulk", "Bwd Avg Packets/Bulk", "Bwd Avg Bulk Rate", 학습에 사용 X
     "Subflow Fwd Packets", "Subflow Fwd Bytes", "Subflow Bwd Packets", "Subflow Bwd Bytes",
     "Init_Win_bytes_forward", "Init_Win_bytes_backward", "act_data_pkt_fwd", "min_seg_size_forward",
     "Active Mean", "Active Std", "Active Max", "Active Min",
@@ -120,8 +123,9 @@ def normalize_csv(input_csv: str, output_csv: str) -> bool:
     df = df.rename(columns=COLUMN_MAP)
 
     # CIC-IDS2017 원본에는 같은 값의 중복 열이 하나 존재한다.
-    if "Fwd Header Length" in df.columns:
-        df["Fwd Header Length.1"] = df["Fwd Header Length"]
+    # 전처리 과정에서 Fwd Header Length.1 열을 빼서 주석 처리
+    #if "Fwd Header Length" in df.columns:
+    #    df["Fwd Header Length.1"] = df["Fwd Header Length"]
 
     missing = [c for c in CICIDS2017_COLUMNS if c not in df.columns]
     if missing:
@@ -136,7 +140,10 @@ def normalize_csv(input_csv: str, output_csv: str) -> bool:
 
     df = df.replace([np.inf, -np.inf], np.nan)
     before_clean = len(df)
-    df = df.dropna().drop_duplicates().reset_index(drop=True)
+
+    # 학습 데이터에서는 중복 제거를 하지 않아서 주석 처리 후 결측치 제거만
+    #df = df.dropna().drop_duplicates().reset_index(drop=True)
+    df = df.dropna().reset_index(drop=True)
 
     df.to_csv(output_path, index=False, encoding="utf-8-sig")
     print("CIC-IDS2017 형식 변환 완료")
