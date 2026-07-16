@@ -41,6 +41,7 @@
 **2. UDP Flood**
 랜덤 소스 IP로 설정하였고, 의미 없는 UDP 패킷을 대량 전송하여 대역폭 소진토록 설정
 *(destPort를 53으로 설정하였으나 DNS Flood와는 형태 상이함)*
+
 ※ SYN Flood, UDP Flood는 hping3 툴로 단순화 가능
 
 **3. HTTP GET Flood**
