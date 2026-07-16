@@ -1,9 +1,7 @@
 import sys
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
-
 
 #CSE-CIC-IDS2018 학습에 사용할 62개 열
 CICIDS2018_COLUMNS = [
@@ -29,12 +27,12 @@ CICIDS2018_COLUMNS = [
 
 
 #Python cicflowmeter와 CSE-CIC-IDS2018의 컬럼명 차이
-COLUMN_MAP = {
+COLUMN_MAP = { 
     "cwr_flag_count": "cwe_flag_count",
 }
 
 
-#Python cicflowmeter는 시간 피처를 초 단위로 출력하고,
+#Python cicflowmeter는 시간 피처를 초 단위로 출력하고
 #CSE-CIC-IDS2018 학습 데이터는 마이크로초 단위를 사용하므로 변환
 TIME_COLUMNS = [
     "flow_duration",
