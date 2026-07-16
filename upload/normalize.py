@@ -17,14 +17,13 @@ CICIDS2018_COLUMNS = [
     'flow_iat_max', 'flow_iat_min', 'flow_iat_std', 'fwd_iat_tot', 
     'fwd_iat_max', 'fwd_iat_min', 'fwd_iat_mean', 'fwd_iat_std', 
     'bwd_iat_tot', 'bwd_iat_max', 'bwd_iat_min', 'bwd_iat_mean', 
-    'bwd_iat_std', 'fwd_psh_flags', 'fwd_urg_flags', 'fin_flag_cnt', 
+    'bwd_iat_std', 'fwd_psh_flags', 'fwd_urg_flags', 'fin_flag_cnt',  
     'syn_flag_cnt', 'rst_flag_cnt', 'psh_flag_cnt', 'ack_flag_cnt', 
     'urg_flag_cnt', 'ece_flag_cnt', 'down_up_ratio', 'pkt_size_avg', 
     'init_fwd_win_byts', 'init_bwd_win_byts', 'fwd_seg_size_avg', 
     'bwd_seg_size_avg', 'cwe_flag_count', 'subflow_fwd_pkts', 
     'subflow_bwd_pkts', 'subflow_fwd_byts', 'subflow_bwd_byts'
     ]
-
 
 #Python cicflowmeter와 CSE-CIC-IDS2018의 컬럼명 차이
 COLUMN_MAP = { 
