@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+
 #CSE-CIC-IDS2018 학습에 사용할 62개 열
 CICIDS2018_COLUMNS = [
     'dst_port', 'protocol', 'flow_duration', 'flow_byts_s', 
