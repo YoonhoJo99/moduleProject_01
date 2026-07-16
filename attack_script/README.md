@@ -78,7 +78,10 @@ sudo python3 traffic.py
 
 - 하위 스크립트 개별 실행: `sudo python3 <script>.py <ip> <port>`
 - `slowloris`, `hulk`는 실행 시 시간 지정이 필요합니다.
+- traffic.py에 slowloris와 hulk 시간 지정은 기본으로 해두었습니다.
+- 개별 실행 시 시간 지정이 필요합니다
 - `traffic.py`를 관리자 권한으로 실행하면 필요한 모듈을 자동으로 확인·설치합니다.
+- sudo 명령어를 사용하여 실행하지 않으면 필요한 모듈을 설치하지 못합니다.
 
 ---
 
