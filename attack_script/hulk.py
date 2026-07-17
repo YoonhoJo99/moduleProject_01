@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# hulk.py <TARGET_IP> [PORT] [DURATION_SEC]
+# hulk.py <TARGET_IP> [PORT] [DURATIONSEC]
 # HULK: flood GET requests with random query params & headers to bypass caching.
 import sys
 import time

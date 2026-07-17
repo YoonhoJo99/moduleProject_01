@@ -8,7 +8,7 @@
 # Victim must run: web server on port 80 (nginx/apache) + sshd on port 22,
 #   and an SSH account (default: testuser).
 #
-# Run:  sudo python3 attack_ubuntu.py <VICTIM_IP>
+# Run:  sudo python3 final.py <VICTIM_IP>
 
 import sys
 import time

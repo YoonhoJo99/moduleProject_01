@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# slowloris.py <TARGET_IP> [PORT] [DURATION_SEC]
+# slowloris.py <TARGET_IP> [PORT] [DURATIONSEC]
 # Slow DoS: open many sockets, send partial HTTP headers slowly to keep connections open.
 import socket
 import sys
