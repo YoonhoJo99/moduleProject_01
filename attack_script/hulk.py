@@ -9,8 +9,8 @@ import urllib.request
 
 TARGET = sys.argv[1]
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 80
-DURATION = int(sys.argv[3]) if len(sys.argv) > 3 else 15
-THREADS = 3
+DURATION = int(sys.argv[3]) if len(sys.argv) > 3 else 60   # 15 → 60
+THREADS = 60
 
 base = f"http://{TARGET}:{PORT}/"
 stop = False
